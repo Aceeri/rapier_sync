@@ -47,7 +47,7 @@ pub fn setup_physics(mut commands: Commands) {
         (
             Name::new("Collider/rigid body, same entity"),
             RigidBody::Dynamic,
-            Collider::cuboid(size, size, size),
+            //Collider::cuboid(size, size, size),
             SpatialBundle {
                 transform: Transform {
                     translation: Vec3::new(0., 2., 0.),
