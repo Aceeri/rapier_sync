@@ -18,9 +18,9 @@ fn main() {
         .add_systems(Startup, (setup_graphics, setup_physics))
         .add_systems(Startup, || {
             info!("Press `T` to toggle hierarchy parent for child colliders");
-            info!("Press `P` to display discrepancies in hierarchy vs collider parents");
+            info!("Press `P` to display discrepancies in rapier vs bevy masses");
         })
-        .add_systems(Update, (print_parents, toggle_parent))
+        .add_systems(Update, (print_masses, toggle_parent))
         .run();
 }
 
@@ -42,7 +42,7 @@ pub fn setup_physics(mut commands: Commands) {
         Collider::cuboid(ground_size, ground_height, ground_size),
     ));
 
-    let size = 5.0;
+    let size = 1.0;
     commands.spawn((
         Name::new("Collider/rigid body, same entity"),
         RigidBody::Dynamic,
@@ -67,6 +67,7 @@ pub fn setup_physics(mut commands: Commands) {
                 },
                 ..default()
             },
+            ReadMassProperties::default(),
         ))
         .id();
 
@@ -81,6 +82,7 @@ pub fn setup_physics(mut commands: Commands) {
                 },
                 ..default()
             },
+            ReadMassProperties::default(),
         ))
         .id();
 
@@ -111,14 +113,15 @@ pub struct ParentToggle {
 pub fn toggle_parent(
     mut commands: Commands,
     input: Res<Input<KeyCode>>,
-    to_toggle: Query<(Entity, &Parent, &ParentToggle)>,
+    to_toggle: Query<(&RapierColliderHandle, &Parent, &ParentToggle)>,
+    mut ctx: ResMut<RapierContext>
 ) {
     if !input.just_pressed(KeyCode::T) {
         return;
     }
     info!("toggling parents");
 
-    for (entity, parent, toggle) in &to_toggle {
+    for (handle, parent, toggle) in &to_toggle {
         let current = parent.get();
 
         let new = if current == toggle.parent1 {
@@ -127,30 +130,34 @@ pub fn toggle_parent(
             toggle.parent1
         };
 
-        commands.entity(entity).set_parent(new);
+        let new = ctx.entity2body().get(&new).copied();
+
+        let RapierContext {
+            bodies, colliders, ..
+        } = &mut *ctx;
+        colliders.set_parent(handle.0, new, bodies);
     }
 }
 
 pub fn print_masses(
     input: Res<Input<KeyCode>>,
     ctx: Res<RapierContext>,
-    colliders: Query<(Entity, &Parent), With<Collider>>,
+    bodies: Query<(Entity, &ReadMassProperties, &RapierRigidBodyHandle)>,
     names: Query<DebugName>,
 ) {
     if !input.just_pressed(KeyCode::P) {
         return;
     }
 
-    for (collider, parent) in &colliders {
-        let rigidbody = ctx.collider_parent(collider);
-        if rigidbody != Some(parent.get()) {
-            info!("collider parent does not match hierarchy parent");
-            info!("collider: {:?}", names.get(collider));
-            info!(
-                "found collider parent: {:?}",
-                rigidbody.map(|entity| names.get(entity))
-            );
-            info!("found hierarchy parent: {:?}", names.get(parent.get()));
+    for (entity, bevy_mass, body_handle) in &bodies {
+        let Some(body) = ctx.bodies.get(body_handle.0) else { continue };
+        let rapier_mass = MassProperties::from_rapier(body.mass_properties().local_mprops, ctx.physics_scale());
+        let bevy_mass = bevy_mass.get();
+
+        if rapier_mass != *bevy_mass {
+            info!("rapier mass does not equal bevy mass for {:?}", names.get(entity));
+            info!("rapier mass: {:.2?}", rapier_mass);
+            info!("bevy mass: {:.2?}", bevy_mass);
         }
     }
 }
