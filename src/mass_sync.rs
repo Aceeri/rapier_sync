@@ -131,7 +131,7 @@ pub fn toggle_parent(
     }
 }
 
-pub fn print_parents(
+pub fn print_masses(
     input: Res<Input<KeyCode>>,
     ctx: Res<RapierContext>,
     colliders: Query<(Entity, &Parent), With<Collider>>,
