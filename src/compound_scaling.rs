@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::prelude::systems::{Isometry, Scale};
 
 fn main() {
     App::new()
@@ -25,6 +26,8 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .spawn(TransformBundle::default())
         .insert(Name::new("Compound"))
         .insert(RigidBody::Dynamic)
+        .insert(Isometry::default())
+        .insert(Scale::default())
         .insert(ToggleCollider)
         .insert(ToggleScale)
         .insert(Collider::compound(vec![
@@ -55,6 +58,8 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
             translation: Vec3::new(-4.0, 0.0, 0.0),
             ..default()
         }))
+        .insert(Isometry::default())
+        .insert(Scale::default())
         .insert(Name::new("Standalone collider"))
         .insert(ToggleScale)
         .insert(ToggleCollider)
@@ -69,6 +74,8 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
             translation: Vec3::new(4.0, 0.0, 0.0),
             ..default()
         }))
+        .insert(Isometry::default())
+        .insert(Scale::default())
         .insert(Name::new("Compound via children"))
         .insert(RigidBody::Dynamic)
         .insert(ToggleScale)
@@ -84,6 +91,8 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
                     translation: Vec3::new(0.0, 1.0, 0.0),
                     ..default()
                 }))
+                .insert(Isometry::default())
+                .insert(Scale::default())
                 .insert(Name::new("Child collider"))
                 .insert(Collider::cuboid(0.5, 0.5, 0.5));
 
@@ -96,6 +105,8 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
                     translation: Vec3::new(-1.0, 1.0, 0.0),
                     ..default()
                 }))
+                .insert(Isometry::default())
+                .insert(Scale::default())
                 .insert(Name::new("Child collider"))
                 .insert(Collider::cuboid(0.5, 0.5, 0.5));
         });
