@@ -114,7 +114,7 @@ pub fn toggle_parent(
     mut commands: Commands,
     input: Res<Input<KeyCode>>,
     to_toggle: Query<(&RapierColliderHandle, &Parent, &ParentToggle)>,
-    mut ctx: ResMut<RapierContext>
+    mut ctx: ResMut<RapierContext>,
 ) {
     if !input.just_pressed(KeyCode::T) {
         return;
@@ -151,11 +151,15 @@ pub fn print_masses(
 
     for (entity, bevy_mass, body_handle) in &bodies {
         let Some(body) = ctx.bodies.get(body_handle.0) else { continue };
-        let rapier_mass = MassProperties::from_rapier(body.mass_properties().local_mprops, ctx.physics_scale());
+        let rapier_mass =
+            MassProperties::from_rapier(body.mass_properties().local_mprops, ctx.physics_scale());
         let bevy_mass = bevy_mass.get();
 
         if rapier_mass != *bevy_mass {
-            info!("rapier mass does not equal bevy mass for {:?}", names.get(entity));
+            info!(
+                "rapier mass does not equal bevy mass for {:?}",
+                names.get(entity)
+            );
             info!("rapier mass: {:.2?}", rapier_mass);
             info!("bevy mass: {:.2?}", bevy_mass);
         }

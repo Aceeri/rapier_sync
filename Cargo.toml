@@ -16,6 +16,9 @@ opt-level = 2
 name = "collider_parent"
 path = "src/collider_parent.rs"
 
+[[bin]]
+name = "compound_scaling"
+path = "src/compound_scaling.rs"
 
 [[bin]]
 name = "mass_sync"

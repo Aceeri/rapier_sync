@@ -1,4 +1,3 @@
-
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -14,7 +13,8 @@ fn main() {
             RapierPhysicsPlugin::<NoUserData>::default(),
             RapierDebugRenderPlugin::default(),
         ))
-        .add_systems(Startup, (setup_graphics, setup_physics))
+        .add_systems(Startup, (setup_graphics, setup_compound, setup_physics))
+        .add_systems(Update, toggle_compound)
         .run();
 }
 
@@ -155,8 +155,8 @@ fn toggle_compound(
     if let Some(new_scale_ratio) = new_scale_ratio {
         for (entity, mut transform) in &mut scale {
             transform.scale *= new_scale_ratio;
-            transform.scale = transform.scale.max(Vec3::new(0.1, 0.1, 0.1));
-            transform.scale = transform.scale.min(Vec3::new(5.0, 5.0, 5.0));
+            transform.scale = transform.scale.max(Vec3::splat(0.01));
+            transform.scale = transform.scale.min(Vec3::splat(15.0));
         }
     }
 
