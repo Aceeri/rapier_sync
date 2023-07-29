@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::prelude::systems::{Isometry, Scale};
 
 fn main() {
     App::new()
@@ -15,7 +14,7 @@ fn main() {
             RapierDebugRenderPlugin::default(),
         ))
         .add_systems(Startup, (setup_graphics, setup_compound, setup_physics))
-        .add_systems(Update, toggle_compound)
+        .add_systems(Update, (toggle_compound, twist_collider))
         .run();
 }
 
@@ -26,8 +25,6 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .spawn(TransformBundle::default())
         .insert(Name::new("Compound"))
         .insert(RigidBody::Dynamic)
-        .insert(Isometry::default())
-        .insert(Scale::default())
         .insert(ToggleCollider)
         .insert(ToggleScale)
         .insert(Collider::compound(vec![
@@ -58,8 +55,6 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
             translation: Vec3::new(-4.0, 0.0, 0.0),
             ..default()
         }))
-        .insert(Isometry::default())
-        .insert(Scale::default())
         .insert(Name::new("Standalone collider"))
         .insert(ToggleScale)
         .insert(ToggleCollider)
@@ -74,8 +69,6 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
             translation: Vec3::new(4.0, 0.0, 0.0),
             ..default()
         }))
-        .insert(Isometry::default())
-        .insert(Scale::default())
         .insert(Name::new("Compound via children"))
         .insert(RigidBody::Dynamic)
         .insert(ToggleScale)
@@ -91,8 +84,6 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
                     translation: Vec3::new(0.0, 1.0, 0.0),
                     ..default()
                 }))
-                .insert(Isometry::default())
-                .insert(Scale::default())
                 .insert(Name::new("Child collider"))
                 .insert(Collider::cuboid(0.5, 0.5, 0.5));
 
@@ -105,8 +96,7 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
                     translation: Vec3::new(-1.0, 1.0, 0.0),
                     ..default()
                 }))
-                .insert(Isometry::default())
-                .insert(Scale::default())
+                .insert(TwistCollider)
                 .insert(Name::new("Child collider"))
                 .insert(Collider::cuboid(0.5, 0.5, 0.5));
         });
@@ -116,6 +106,29 @@ fn setup_compound(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
 pub struct ToggleCollider;
 #[derive(Component)]
 pub struct ToggleScale;
+#[derive(Component)]
+pub struct TwistCollider;
+
+fn twist_collider(
+    keycode: Res<Input<KeyCode>>,
+    mut commands: Commands,
+    mut collider: Query<(Entity, &mut Transform), With<TwistCollider>>,
+) {
+    let rotate = if keycode.pressed(KeyCode::H) {
+        Some(2.0 * 180.0 / std::f32::consts::PI)
+    } else if keycode.pressed(KeyCode::G) {
+        Some(-2.0 * 180.0 / std::f32::consts::PI)
+    } else {
+        None
+    };
+
+    if let Some(rotate) = rotate {
+        for (entity, mut transform) in &mut collider {
+            transform.rotation *= Quat::from_rotation_x(rotate);
+        }
+    }
+}
+
 
 fn toggle_compound(
     keycode: Res<Input<KeyCode>>,
